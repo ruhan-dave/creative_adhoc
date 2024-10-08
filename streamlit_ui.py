@@ -1,5 +1,3 @@
-# file: streamlit_app.py
-
 import streamlit as st
 import pandas as pd
 from statsmodels.stats.multicomp import pairwise_tukeyhsd
@@ -8,8 +6,14 @@ import statsmodels.api as sm
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+"""
+Disclaimer that we:
 
-# Helper function to perform Tukey's HSD test
+    1. Used GenAI to assist with the making of this UI / creative component. 
+    2. Did NOT use GenAI for the code demo for A/B tests involved in this project. 
+
+"""
+# Tukey's test
 def perform_tukey_hsd(data):
     df = pd.DataFrame(data)
     model = ols('sleep_hours ~ C(group)', data=df).fit()
@@ -24,20 +28,22 @@ st.title("Tukey's HSD Sleep Hours Analysis")
 # Number of groups
 num_groups = st.number_input("Enter number of groups:", min_value=2, max_value=10, step=1)
 
+# Create inputs for each group
 group_data = {}
 
-# Create inputs for each group
 for i in range(1, num_groups + 1):
     group_name = f"Group {i}"
     num_members = st.number_input(f"Enter number of members for {group_name}:", min_value=1, max_value=20, step=1)
     
+    # get sleeping hours for each group as a list 
     sleep_hours = []
     for j in range(num_members):
         sleep_hours.append(st.number_input(f"Hours of sleep for member {j+1} of {group_name}:", min_value=0.0, max_value=24.0, step=0.1))
     
+    # make the dictionary for group i 
     group_data[group_name] = sleep_hours
 
-# On submit button click
+# Submit button click
 if st.button("Submit"):
     # Prepare the data for Tukey's HSD
     data = {
@@ -49,18 +55,17 @@ if st.button("Submit"):
         data['group'].extend([group] * len(hours))
         data['sleep_hours'].extend(hours)
     
-    # Perform Tukey's HSD test
+    # Tukey's HSD test
     result = perform_tukey_hsd(data)
     
     # Display Tukey's HSD results
     st.write("### Tukey's HSD Results (p-values)")
     st.dataframe(result)
     
-    # Create a DataFrame for the plots
     df = pd.DataFrame(data)
     
-    # Plot overall distribution of hours of sleep
-    st.write("### Overall Distribution of Hours of Sleep")
+    # Plot overall distribution of sleep hours for all groups 
+    st.write("### Distribution of Hours of Sleep")
     fig, ax = plt.subplots()
     sns.histplot(df['sleep_hours'], kde=True, ax=ax)
     ax.set_xlabel("Hours of Sleep")
